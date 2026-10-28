@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "kubernetes": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@dockndevai/mcp-kubernetes"],
+      "env": {
+        "K8S_MODE": "read-only"
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+// 把下面四项合并进你的 settings.json（用户级或工作区级）。
+// 复制时保留 JSONC 注释没关系，VS Code 的设置文件支持注释。
+{
+  // ── 1. 终端白名单：只读命令免确认，写命令永远要确认 ─────────────────
+  // 注意：这不是安全边界（官方文档明说语法解析可能漏），
+  //       它只是减少点击次数；真正的边界是 MCP 只读模式 + 钩子。
+  "chat.tools.terminal.enableAutoApprove": true,
+  "chat.tools.terminal.autoApprove": {
+    // 只读的 kubectl
+    "/^\\s*kubectl\\s+(get|describe|logs|events|top|explain|api-resources|version|cluster-info|config\\s+view)\\b/": true,
+    // 集群类写操作：一律要确认（false 的优先级高于 true）
+    "/\\bkubectl\\b[^;|&]*\\b(delete|exec|apply|patch|scale|drain|cordon|uncordon|taint|replace|edit|create|label|annotate|set|rollout\\s+(restart|undo|pause|resume))\\b/": false,
+    "/\\bhelm\\b[^;|&]*\\b(install|upgrade|uninstall|rollback|delete)\\b/": false,
+
+    // 日常构建/查询，按你项目的实际命令增删
+    "/^\\s*\\.\\/mvnw\\s+(-q\\s+)?-DskipTests\\s+compile\\b/": true,
+    "/^\\s*\\.\\/mvnw\\s+(-q\\s+)?test\\b/": true,
+    "/^\\s*git\\s+(status|diff|log|show|branch|remote)\\b/": true,
+    "/^\\s*git\\s+(push|reset|clean|checkout\\s+--)\\b/": false
+  },
+
+  // ── 2. 沙盒：限制终端能碰的文件和网络（默认是关的）───────────────
+  // macOS/Linux/WSL2 上为 Preview；Linux/WSL2 需要 bubblewrap + socat。
+  "chat.agent.sandbox.enabled": true,
+
+  // ── 3. MCP 工具永不自动批准 ─────────────────────────────────────
+  // 键名必须和真实工具名完全一致，所以不要手写：
+  //   命令面板 → Chat: Manage Tool Approval → 展开 kubernetes → 取消勾选全部
+  // 需要硬锁时，再把工具名填进来并把值设为 false（此时确认框里连
+  // 「总是允许」都不会出现）：
+  "chat.tools.eligibleForAutoApproval": {
+    // "mcp_kubernetes_delete_resource": false
+  },
+
+  // ── 4. 让 MCP Gallery 可见（按公司策略可能被覆盖）──────────────
+  "chat.mcp.gallery.enabled": true
+}
