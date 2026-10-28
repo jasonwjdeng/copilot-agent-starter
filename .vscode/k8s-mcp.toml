@@ -1,0 +1,45 @@
+# kubernetes-mcp-server（containers org / Red Hat 系）的运行时策略。
+#
+# 两个坑先说：
+#   1. 这个 server 的运行时设置**只认 TOML**，不读 K8S_MODE 这类环境变量，
+#      命令行也只有 --config / --config-dir / --version。改策略就改这个文件。
+#   2. 未知键会让 server 直接启动失败（不是忽略）。改之前对照
+#      https://github.com/containers/kubernetes-mcp-server/blob/main/docs/configuration.md
+#   3. 顶层键必须写在所有 [[...]] 段之前，否则会被归到上一个表里 → 变成未知键 → 启动失败。
+
+# ── 第一道锁：只读 ────────────────────────────────────────────────
+# 置 true 时，写类工具根本不会注册到工具表里（不是"注册了但拒绝"）。
+read_only = true
+
+# ── 工具组 ───────────────────────────────────────────────────────
+# 默认就是这两组。core = pods / events / 通用资源 / 节点；config = kubeconfig 与 context。
+# 不开 helm / kubevirt / tekton / kiali —— 工具越少，模型选错工具的概率越低。
+toolsets = ["core", "config"]
+
+# ── 确认流程的兜底方向 ───────────────────────────────────────────
+# 客户端不支持 MCP elicitation 时（VS Code 目前不支持）默认是 allow，
+# 改成 deny 让"确认不了"等于"拒绝"，而不是等于"放行"。
+confirmation_fallback = "deny"
+
+# 这段会随 server 一起进模型上下文，和 AGENTS.md 的口径保持一致。
+server_instructions = """
+这个集群是只读的：写操作的工具不存在。不要用 shell 调 kubectl delete/exec/apply
+绕过去。需要改动时给出完整命令、影响面与回滚方式，由人执行；观察状态用
+get / describe / logs / events。Secret 已被禁用，不要尝试读取。
+"""
+
+# ── 第二道锁：连读也不许读的东西 ─────────────────────────────────
+# 只读限制的是"写"，没限制"读"。`kubectl get secret x -o yaml` 完全合规，
+# base64 解一下就是 token、证书和连接串。所以这一条必须单独存在。
+# 注意字段是 group / version / kind（不是 apiVersion），核心组用空字符串。
+[[denied_resources]]
+group = ""
+version = "v1"
+kind = "Secret"
+
+# ConfigMap 默认放开：排障时经常要确认键名、看配置是否挂错。
+# 如果你那边 ConfigMap 里也放凭证，取消下面两行的注释。
+# [[denied_resources]]
+# group = ""
+# version = "v1"
+# kind = "ConfigMap"

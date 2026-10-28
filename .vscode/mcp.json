@@ -3,10 +3,13 @@
     "kubernetes": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@dockndevai/mcp-kubernetes"],
-      "env": {
-        "K8S_MODE": "read-only"
-      }
+      "args": [
+        "-y",
+        "kubernetes-mcp-server@latest",
+        "--config",
+        ".vscode/k8s-mcp.toml"
+      ],
+      "cwd": "${workspaceFolder}"
     }
   }
 }
