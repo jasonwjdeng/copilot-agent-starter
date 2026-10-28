@@ -11,6 +11,8 @@
     // 集群类写操作：一律要确认（false 的优先级高于 true）
     "/\\bkubectl\\b[^;|&]*\\b(delete|exec|apply|patch|scale|drain|cordon|uncordon|taint|replace|edit|create|label|annotate|set|rollout\\s+(restart|undo|pause|resume))\\b/": false,
     "/\\bhelm\\b[^;|&]*\\b(install|upgrade|uninstall|rollback|delete)\\b/": false,
+    // 读 Secret 也要确认：只读模式拦得住写，拦不住把 token 读出来
+    "/\\bkubectl\\b[^;|&]*\\b(get|describe)\\b[^;|&]*[\\s,]secrets?([\\s/]|$)/": false,
 
     // 日常构建/查询，按你项目的实际命令增删
     "/^\\s*\\.\\/mvnw\\s+(-q\\s+)?-DskipTests\\s+compile\\b/": true,
@@ -27,9 +29,12 @@
   // 键名必须和真实工具名完全一致，所以不要手写：
   //   命令面板 → Chat: Manage Tool Approval → 展开 kubernetes → 取消勾选全部
   // 需要硬锁时，再把工具名填进来并把值设为 false（此时确认框里连
-  // 「总是允许」都不会出现）：
+  // 「总是允许」都不会出现）。
+  // 注意：只读模式下 pods_delete / resources_delete 这些工具**根本不存在**，
+  // 所以这一栏在当前配置里是空的、属于后手 —— 它的价值在于「哪天有人把
+  // read_only 改成 false，这道锁还在」。
   "chat.tools.eligibleForAutoApproval": {
-    // "mcp_kubernetes_delete_resource": false
+    // "mcp_kubernetes_pods_delete": false
   },
 
   // ── 4. 让 MCP Gallery 可见（按公司策略可能被覆盖）──────────────

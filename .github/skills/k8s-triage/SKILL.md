@@ -86,6 +86,7 @@ kubectl get rs -n <ns> -o wide
 ## 硬边界
 
 - **不执行** `delete / exec / apply / patch / scale / drain / cordon / rollout restart`
+- **不读 Secret 内容**：服务端已屏蔽这一类资源，也别从终端绕；排障只确认键名、是否存在、是否挂载成功
 - `port-forward` 需要人确认（它会占本地端口）
 - 不猜 namespace、不猜 pod 名；拿不准就问
 - 日志里出现 token、连接串、手机号时，**在引用时打码**，不要把整段日志贴进回答
